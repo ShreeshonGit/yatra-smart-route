@@ -1,21 +1,124 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Navigation, Hospital, Plus } from "lucide-react";
+import { Loader } from "@googlemaps/js-api-loader";
 
 const LiveTracking = () => {
   const [busLocation, setBusLocation] = useState({ lat: 30.7333, lng: 76.7794 }); // Chandigarh
   const [isTracking, setIsTracking] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const busMarkerRef = useRef<google.maps.Marker | null>(null);
+  const [apiKey, setApiKey] = useState("");
+
+  // Initialize Google Maps
+  useEffect(() => {
+    const initMap = async () => {
+      if (!mapRef.current || !apiKey) return;
+
+      try {
+        const loader = new Loader({
+          apiKey: apiKey,
+          version: "weekly",
+          libraries: ["places"]
+        });
+
+        const google = await loader.load();
+        
+        const map = new google.maps.Map(mapRef.current, {
+          center: busLocation,
+          zoom: 14,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+
+        mapInstanceRef.current = map;
+
+        // Add bus marker
+        const busMarker = new google.maps.Marker({
+          position: busLocation,
+          map: map,
+          title: "Bus Location",
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#3B82F6",
+            fillOpacity: 1,
+            strokeColor: "#1E40AF",
+            strokeWeight: 2,
+          },
+        });
+
+        busMarkerRef.current = busMarker;
+
+        // Add route polyline
+        const routePath = [
+          { lat: 30.9000, lng: 75.8573 }, // Ludhiana
+          { lat: 30.7333, lng: 76.7794 }, // Current position
+          { lat: 31.6340, lng: 74.8723 }  // Amritsar
+        ];
+
+        new google.maps.Polyline({
+          path: routePath,
+          geodesic: true,
+          strokeColor: "#FF6B35",
+          strokeOpacity: 1.0,
+          strokeWeight: 4,
+          map: map,
+        });
+
+        // Add nearby facilities
+        const facilities = [
+          { lat: 30.7350, lng: 76.7800, title: "City Hospital", type: "hospital" },
+          { lat: 30.7320, lng: 76.7780, title: "Metro Pharmacy", type: "pharmacy" },
+        ];
+
+        facilities.forEach(facility => {
+          new google.maps.Marker({
+            position: { lat: facility.lat, lng: facility.lng },
+            map: map,
+            title: facility.title,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 6,
+              fillColor: facility.type === "hospital" ? "#EF4444" : "#10B981",
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2,
+            },
+          });
+        });
+
+      } catch (error) {
+        console.error("Error loading Google Maps:", error);
+      }
+    };
+
+    if (apiKey) {
+      initMap();
+    }
+  }, [apiKey, busLocation]);
 
   // Simulate bus movement
   useEffect(() => {
     if (isTracking) {
       const interval = setInterval(() => {
-        setBusLocation(prev => ({
-          lat: prev.lat + (Math.random() - 0.5) * 0.001,
-          lng: prev.lng + (Math.random() - 0.5) * 0.001
-        }));
+        setBusLocation(prev => {
+          const newLocation = {
+            lat: prev.lat + (Math.random() - 0.5) * 0.001,
+            lng: prev.lng + (Math.random() - 0.5) * 0.001
+          };
+
+          // Update bus marker position
+          if (busMarkerRef.current) {
+            busMarkerRef.current.setPosition(newLocation);
+          }
+
+          return newLocation;
+        });
       }, 3000);
 
       return () => clearInterval(interval);
@@ -76,7 +179,7 @@ const LiveTracking = () => {
         </CardContent>
       </Card>
 
-      {/* Google Maps Simulation */}
+      {/* Google Maps Integration */}
       <Card>
         <CardHeader>
           <CardTitle>Live Map View</CardTitle>
@@ -84,34 +187,36 @@ const LiveTracking = () => {
             Google Maps integration showing bus location and nearby facilities
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="relative h-64 bg-muted rounded-lg overflow-hidden">
-            {/* Map placeholder */}
-            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 opacity-20"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-8 h-8 mx-auto mb-2 text-primary" />
-                <p className="text-sm text-muted-foreground">Google Maps View</p>
-                <p className="text-xs text-muted-foreground">
-                  Lat: {busLocation.lat.toFixed(4)}, Lng: {busLocation.lng.toFixed(4)}
-                </p>
+        <CardContent className="space-y-4">
+          {!apiKey ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Enter your Google Maps API key to view live tracking:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter Google Maps API Key"
+                  className="flex-1 px-3 py-2 border rounded-md text-sm"
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <Button size="sm">Load Map</Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Get your API key from <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Cloud Console</a>
+              </p>
             </div>
-            
-            {/* Animated bus marker */}
-            {isTracking && (
-              <div 
-                className="absolute w-4 h-4 bg-primary rounded-full animate-pulse"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
-                <div className="absolute inset-0 bg-primary rounded-full animate-ping"></div>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div 
+              ref={mapRef} 
+              className="w-full h-96 rounded-lg border"
+              style={{ minHeight: '400px' }}
+            />
+          )}
+          
+          {apiKey && (
+            <div className="text-xs text-muted-foreground text-center">
+              Live Location: {busLocation.lat.toFixed(4)}, {busLocation.lng.toFixed(4)}
+            </div>
+          )}
         </CardContent>
       </Card>
 
