@@ -1,124 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Navigation, Hospital, Plus } from "lucide-react";
-import { Loader } from "@googlemaps/js-api-loader";
 
 const LiveTracking = () => {
   const [busLocation, setBusLocation] = useState({ lat: 30.7333, lng: 76.7794 }); // Chandigarh
   const [isTracking, setIsTracking] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const busMarkerRef = useRef<google.maps.Marker | null>(null);
-  const [apiKey, setApiKey] = useState("");
-
-  // Initialize Google Maps
-  useEffect(() => {
-    const initMap = async () => {
-      if (!mapRef.current || !apiKey) return;
-
-      try {
-        const loader = new Loader({
-          apiKey: apiKey,
-          version: "weekly",
-          libraries: ["places"]
-        });
-
-        const google = await loader.load();
-        
-        const map = new google.maps.Map(mapRef.current, {
-          center: busLocation,
-          zoom: 14,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        });
-
-        mapInstanceRef.current = map;
-
-        // Add bus marker
-        const busMarker = new google.maps.Marker({
-          position: busLocation,
-          map: map,
-          title: "Bus Location",
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: "#3B82F6",
-            fillOpacity: 1,
-            strokeColor: "#1E40AF",
-            strokeWeight: 2,
-          },
-        });
-
-        busMarkerRef.current = busMarker;
-
-        // Add route polyline
-        const routePath = [
-          { lat: 30.9000, lng: 75.8573 }, // Ludhiana
-          { lat: 30.7333, lng: 76.7794 }, // Current position
-          { lat: 31.6340, lng: 74.8723 }  // Amritsar
-        ];
-
-        new google.maps.Polyline({
-          path: routePath,
-          geodesic: true,
-          strokeColor: "#FF6B35",
-          strokeOpacity: 1.0,
-          strokeWeight: 4,
-          map: map,
-        });
-
-        // Add nearby facilities
-        const facilities = [
-          { lat: 30.7350, lng: 76.7800, title: "City Hospital", type: "hospital" },
-          { lat: 30.7320, lng: 76.7780, title: "Metro Pharmacy", type: "pharmacy" },
-        ];
-
-        facilities.forEach(facility => {
-          new google.maps.Marker({
-            position: { lat: facility.lat, lng: facility.lng },
-            map: map,
-            title: facility.title,
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
-              fillColor: facility.type === "hospital" ? "#EF4444" : "#10B981",
-              fillOpacity: 1,
-              strokeColor: "#FFFFFF",
-              strokeWeight: 2,
-            },
-          });
-        });
-
-      } catch (error) {
-        console.error("Error loading Google Maps:", error);
-      }
-    };
-
-    if (apiKey) {
-      initMap();
-    }
-  }, [apiKey, busLocation]);
 
   // Simulate bus movement
   useEffect(() => {
     if (isTracking) {
       const interval = setInterval(() => {
-        setBusLocation(prev => {
-          const newLocation = {
-            lat: prev.lat + (Math.random() - 0.5) * 0.001,
-            lng: prev.lng + (Math.random() - 0.5) * 0.001
-          };
-
-          // Update bus marker position
-          if (busMarkerRef.current) {
-            busMarkerRef.current.setPosition(newLocation);
-          }
-
-          return newLocation;
-        });
+        setBusLocation(prev => ({
+          lat: prev.lat + (Math.random() - 0.5) * 0.001,
+          lng: prev.lng + (Math.random() - 0.5) * 0.001
+        }));
       }, 3000);
 
       return () => clearInterval(interval);
@@ -179,44 +76,58 @@ const LiveTracking = () => {
         </CardContent>
       </Card>
 
-      {/* Google Maps Integration */}
+      {/* Map View */}
       <Card>
         <CardHeader>
           <CardTitle>Live Map View</CardTitle>
           <CardDescription>
-            Google Maps integration showing bus location and nearby facilities
+            Real-time bus location with route and nearby facilities
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {!apiKey ? (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Enter your Google Maps API key to view live tracking:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter Google Maps API Key"
-                  className="flex-1 px-3 py-2 border rounded-md text-sm"
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <Button size="sm">Load Map</Button>
+        <CardContent>
+          <div className="relative h-96 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/20">
+            {/* Map background pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50"></div>
+            <div className="absolute inset-0" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d1d5db' fill-opacity='0.1'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20.5'/%3E%3C/g%3E%3C/svg%3E")`,
+            }}></div>
+            
+            {/* Route line */}
+            <svg className="absolute inset-0 w-full h-full">
+              <path 
+                d="M 50 200 Q 200 150 350 200" 
+                stroke="#FF6B35" 
+                strokeWidth="4" 
+                fill="none"
+                strokeDasharray="8,4"
+              />
+            </svg>
+            
+            {/* Bus marker */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                <div className={`w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold ${isTracking ? 'animate-pulse' : ''}`}>
+                  🚌
+                </div>
+                {isTracking && (
+                  <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-30"></div>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Get your API key from <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Cloud Console</a>
-              </p>
             </div>
-          ) : (
-            <div 
-              ref={mapRef} 
-              className="w-full h-96 rounded-lg border"
-              style={{ minHeight: '400px' }}
-            />
-          )}
-          
-          {apiKey && (
-            <div className="text-xs text-muted-foreground text-center">
-              Live Location: {busLocation.lat.toFixed(4)}, {busLocation.lng.toFixed(4)}
+            
+            {/* Facility markers */}
+            <div className="absolute top-16 left-20">
+              <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">🏥</div>
             </div>
-          )}
+            <div className="absolute bottom-20 right-24">
+              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">💊</div>
+            </div>
+            
+            {/* Coordinates display */}
+            <div className="absolute bottom-4 left-4 bg-white/90 px-2 py-1 rounded text-xs">
+              Lat: {busLocation.lat.toFixed(4)}, Lng: {busLocation.lng.toFixed(4)}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
