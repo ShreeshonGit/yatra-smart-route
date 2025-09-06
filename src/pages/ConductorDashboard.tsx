@@ -3,26 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import { LogOut, QrCode, Users, AlertTriangle, Ticket, Shield } from "lucide-react";
-=======
-import { LogOut, QrCode, Users, AlertTriangle, Ticket, Shield, Map } from "lucide-react";
->>>>>>> 1764fde (changed Conductor page)
+import { LogOut, QrCode, Users, AlertTriangle, Ticket, Shield, Map, Radio } from "lucide-react";
 import saralYatraLogo from "/lovable-uploads/840dd5e2-0b9e-4979-a974-de75ae35b815.png";
 import QRScanner from "@/components/conductor/QRScanner";
 import OfflineBooking from "@/components/conductor/OfflineBooking";
 import SeatManagement from "@/components/conductor/SeatManagement";
 import EmergencyReporting from "@/components/conductor/EmergencyReporting";
+import IoTSeatTracking from "@/components/conductor/IoTSeatTracking";
 
 const ConductorDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("scanner");
+  const [activeTab, setActiveTab] = useState("iot-tracking");
 
   const handleLogout = () => {
     navigate("/");
   };
 
   const tabs = [
+    { 
+      id: "iot-tracking", 
+      label: "IoT Seat Tracking", 
+      icon: Radio,
+      component: <IoTSeatTracking />
+    },
     { 
       id: "scanner", 
       label: "QR Scanner", 
@@ -42,8 +45,6 @@ const ConductorDashboard = () => {
       component: <SeatManagement />
     },
     { 
-<<<<<<< HEAD
-=======
       id: "map", 
       label: "Route Map", 
       icon: Map,
@@ -184,7 +185,6 @@ const ConductorDashboard = () => {
       )
     },
     { 
->>>>>>> 1764fde (changed Conductor page)
       id: "emergency", 
       label: "Emergency", 
       icon: AlertTriangle,
@@ -234,11 +234,7 @@ const ConductorDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-<<<<<<< HEAD
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
-=======
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
->>>>>>> 1764fde (changed Conductor page)
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (

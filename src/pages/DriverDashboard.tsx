@@ -3,16 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Navigation, AlertTriangle, BookOpen, Route } from "lucide-react";
+import { LogOut, Route, AlertTriangle, MapPin, Shield, Camera, Navigation } from "lucide-react";
 import saralYatraLogo from "/lovable-uploads/840dd5e2-0b9e-4979-a974-de75ae35b815.png";
-import TrafficAlerts from "@/components/driver/TrafficAlerts";
-import GPSLogbook from "@/components/driver/GPSLogbook";
 import RouteNavigation from "@/components/driver/RouteNavigation";
+import TrafficAlerts from "@/components/driver/TrafficAlerts";
 import DivertedRoute from "@/components/driver/DivertedRoute";
+import GPSLogbook from "@/components/driver/GPSLogbook";
+import FaceLogin from "@/components/driver/FaceLogin";
+import GeofencingSystem from "@/components/driver/GeofencingSystem";
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("navigation");
+  const [activeTab, setActiveTab] = useState("face-login");
 
   const handleLogout = () => {
     navigate("/");
@@ -20,9 +22,21 @@ const DriverDashboard = () => {
 
   const tabs = [
     { 
-      id: "navigation", 
-      label: "Navigation", 
+      id: "face-login", 
+      label: "Face Login", 
+      icon: Camera,
+      component: <FaceLogin onLoginSuccess={() => setActiveTab("geofencing")} />
+    },
+    { 
+      id: "geofencing", 
+      label: "Trip Management", 
       icon: Navigation,
+      component: <GeofencingSystem />
+    },
+    { 
+      id: "navigation", 
+      label: "Route Navigation", 
+      icon: Route,
       component: <RouteNavigation />
     },
     { 
@@ -34,13 +48,13 @@ const DriverDashboard = () => {
     { 
       id: "diverted", 
       label: "Diverted Route", 
-      icon: Route,
+      icon: MapPin,
       component: <DivertedRoute />
     },
     { 
       id: "logbook", 
       label: "GPS Logbook", 
-      icon: BookOpen,
+      icon: MapPin,
       component: <GPSLogbook />
     }
   ];
@@ -64,7 +78,7 @@ const DriverDashboard = () => {
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Navigation className="w-4 h-4" />
+              <Shield className="w-4 h-4" />
               <span className="text-sm">Driver ID: DRV001</span>
             </div>
             <Button 
@@ -83,11 +97,11 @@ const DriverDashboard = () => {
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-accent mb-2">Driver Dashboard</h2>
-          <p className="text-muted-foreground">Navigation, traffic alerts, and route management</p>
+          <p className="text-muted-foreground">Automated biometric login, geofencing, and route management</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (

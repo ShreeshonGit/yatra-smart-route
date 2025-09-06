@@ -3,21 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Map, BarChart3, Database, Building2 } from "lucide-react";
+import { LogOut, Map, BarChart3, Database, Building2, Camera } from "lucide-react";
 import saralYatraLogo from "/lovable-uploads/840dd5e2-0b9e-4979-a974-de75ae35b815.png";
 import FleetMonitoring from "@/components/government/FleetMonitoring";
 import AnalyticsDashboard from "@/components/government/AnalyticsDashboard";
 import PassengerDatabase from "@/components/government/PassengerDatabase";
+import BiometricLogs from "@/components/government/BiometricLogs";
 
 const GovernmentDashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("fleet");
+  const [activeTab, setActiveTab] = useState("biometric");
 
   const handleLogout = () => {
     navigate("/");
   };
 
   const tabs = [
+    { 
+      id: "biometric", 
+      label: "Biometric Logs", 
+      icon: Camera,
+      component: <BiometricLogs />
+    },
     { 
       id: "fleet", 
       label: "Fleet Monitoring", 
@@ -80,7 +87,7 @@ const GovernmentDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
               return (
